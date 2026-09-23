@@ -84,6 +84,8 @@ def run_qc_checks(
     confidence_threshold: float = 0.05,
     sample_mask: np.ndarray | None = None,
     orientation_roi_invalid: bool = False,
+    orientation_enabled: bool = True,
+    radial_center: tuple[float, float] | list[float] | None = None,
 ) -> QCResult:
     """Run all Stage-1 QC checks and return an aggregated result.
 
@@ -149,14 +151,15 @@ def run_qc_checks(
     _check_cluster_sizes(phase, flags)
 
     # --- 6. Beam centre offset ---------------------------------------------
-    _check_beam_center(virtual, flags)
+    _check_beam_center(virtual, flags, radial_center=radial_center)
 
     # --- 7. Saturation fraction --------------------------------------------
     _check_saturation(virtual, flags)
 
     # --- 8. Orientation confidence -----------------------------------------
-    _check_orientation_roi(orientation, orientation_roi_invalid, flags)
-    _check_orientation_confidence(orientation, confidence_threshold, flags)
+    if orientation_enabled:
+        _check_orientation_roi(orientation, orientation_roi_invalid, flags)
+        _check_orientation_confidence(orientation, confidence_threshold, flags)
 
     # --- 9. ROI candidates -------------------------------------------------
     _check_roi_candidates(diagnostics, flags)
@@ -351,7 +354,7 @@ def _check_cluster_sizes(phase: PhaseScreeningResult | None, flags: list[QCFlag]
         )
 
 
-def _check_beam_center(virtual: VirtualImageResult | None, flags: list[QCFlag]) -> None:
+def _check_beam_center(virtual: VirtualImageResult | None, flags: list[QCFlag], *, radial_center=None) -> None:
     if virtual is None:
         return
     try:
@@ -360,8 +363,7 @@ def _check_beam_center(virtual: VirtualImageResult | None, flags: list[QCFlag]) 
         total = max(float(mean_dp.sum()), 1e-12)
         cy = float((mean_dp * yy).sum() / total)
         cx = float((mean_dp * xx).sum() / total)
-        rc_y = (mean_dp.shape[0] - 1) / 2
-        rc_x = (mean_dp.shape[1] - 1) / 2
+        rc_y, rc_x = radial_center if radial_center is not None else ((mean_dp.shape[0] - 1) / 2, (mean_dp.shape[1] - 1) / 2)
         offset = float(np.hypot(cy - rc_y, cx - rc_x))
 
         if offset > 3:
@@ -371,7 +373,7 @@ def _check_beam_center(virtual: VirtualImageResult | None, flags: list[QCFlag]) 
                     code="BEAM_CENTER_OFFSET",
                     message=(
                         f"Estimated beam centre ({cy:.1f}, {cx:.1f}) is {offset:.1f} px "
-                        f"from the geometric centre ({rc_y:.1f}, {rc_x:.1f}). "
+                        f"from the radial integration centre ({rc_y:.1f}, {rc_x:.1f}). "
                         "Radial fingerprints and fingerprint-class labels may be biased."
                     ),
                     evidence={
@@ -386,20 +388,18 @@ def _check_beam_center(virtual: VirtualImageResult | None, flags: list[QCFlag]) 
 
 
 def _check_saturation(virtual: VirtualImageResult | None, flags: list[QCFlag]) -> None:
-    if virtual is None:
+    if virtual is None or virtual.saturation_fraction is None:
         return
     try:
-        max_dp = np.asarray(virtual.max_diffraction, dtype=np.float32)
-        saturated = max_dp >= np.percentile(max_dp, 99.9)
-        sat_fraction = float(np.mean(saturated))
+        sat_fraction = float(np.mean(virtual.saturation_fraction > 0))
         if sat_fraction > 0.05:
             flags.append(
                 QCFlag(
                     severity="warning",
                     code="SATURATION_HIGH",
                     message=(
-                        f"{sat_fraction:.1%} of diffraction patterns show saturation "
-                        f"in the 99.9th percentile of the max-diffraction image. "
+                        f"{sat_fraction:.1%} of diffraction patterns contain pixels "
+                        "at or above the supplied saturation threshold. "
                         "COM-x / COM-y and radial profiles may be distorted."
                     ),
                     evidence={"saturation_fraction": round(sat_fraction, 5)},

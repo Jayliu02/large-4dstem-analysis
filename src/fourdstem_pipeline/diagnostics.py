@@ -54,6 +54,7 @@ def run_stage1_diagnostics(
     png_dir: str | Path,
     block_shape: tuple[int, int],
     confidence_threshold: float,
+    radial_center: tuple[float, float] | list[float] | None = None,
 ) -> dict[str, Any]:
     """Run the full suite of stage-1 diagnostics and return output paths.
 
@@ -148,7 +149,7 @@ def run_stage1_diagnostics(
     # Group 6 -- Beam diagnostics (no orientation dep)
     beam_outputs: dict[str, Any] = {}
     try:
-        beam_outputs = beam_diagnostics(virtual, png_dir, output_dir / "00_preprocess")
+        beam_outputs = beam_diagnostics(virtual, png_dir, output_dir / "00_preprocess", radial_center=radial_center)
     except Exception as exc:
         log.error("Beam diagnostics failed: %s", exc)
         diag_errors.append(f"beam_diagnostics: {exc}")

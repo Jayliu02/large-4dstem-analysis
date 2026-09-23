@@ -244,7 +244,7 @@ def run_workflow(
     orientation_roi_invalid = False
     roi_raw = orientation_cfg.get("roi")
 
-    if roi_raw is not None:
+    if bool(orientation_cfg.get("enabled", True)) and roi_raw is not None:
         y0_raw, y1_raw, x0_raw, x1_raw = [int(v) for v in roi_raw]
         # Pre-validate: reject ROI where end <= start before clamping
         if y1_raw <= y0_raw or x1_raw <= x0_raw:
@@ -255,7 +255,7 @@ def run_workflow(
                 roi_raw, y1_raw, y0_raw, x1_raw, x0_raw,
             )
 
-    if orientation_roi_invalid:
+    if not bool(orientation_cfg.get("enabled", True)) or orientation_roi_invalid:
         orientation = None
     else:
         orientation = _run_stage(
@@ -310,6 +310,7 @@ def run_workflow(
                 png_dir=png_dir,
                 block_shape=block_shape,
                 confidence_threshold=float(orientation_cfg.get("confidence_threshold", 0.05)),
+                radial_center=geometry.get("center"),
             ),
             errors=errors,
         ) or {}
@@ -373,6 +374,8 @@ def run_workflow(
         confidence_threshold=float(orientation_cfg.get("confidence_threshold", 0.05)),
         sample_mask=sample_mask,
         orientation_roi_invalid=orientation_roi_invalid,
+        orientation_enabled=bool(orientation_cfg.get("enabled", True)),
+        radial_center=geometry.get("center"),
     )
     save_qc_summary(output_dir, qc_result)
 

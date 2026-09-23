@@ -179,6 +179,14 @@ def load_dataset(
         return _load_h5(data_path, lazy=lazy, scan_shape=scan_shape, detector_shape=detector_shape, backend=backend)
 
     if suffix == ".mib":
+        if backend == "mib_memmap":
+            if scan_shape is None or detector_shape is None or dtype is None or mib_header_bytes is None:
+                raise ValueError("Explicit mib_memmap requires scan_shape, detector_shape, dtype (including byte order), and mib_header_bytes.")
+            expected_bytes = int(np.prod(scan_shape)) * (int(mib_header_bytes) + int(np.prod(detector_shape)) * np.dtype(dtype).itemsize)
+            if data_path.stat().st_size != expected_bytes:
+                raise ValueError("MIB file size does not match the explicit fixed-frame layout.")
+            return _load_mib_memmap(data_path, scan_shape=scan_shape, detector_shape=detector_shape,
+                                    dtype=dtype, header_bytes=mib_header_bytes, cache=cache, backend=backend)
         return _load_mib_with_hyperspy(
             data_path,
             lazy=lazy,
@@ -270,7 +278,7 @@ def _load_mib_memmap(
             "axes": [],
             "pyxem_available": False,
             "pyxem_signal_type": None,
-            "pyxem_error": "HyperSpy not installed; used fixed-frame memmap fallback.",
+            "pyxem_error": "Fixed-frame memmap reader used; HyperSpy was not used.",
         },
     )
 

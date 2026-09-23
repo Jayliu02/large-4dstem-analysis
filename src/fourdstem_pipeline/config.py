@@ -95,18 +95,20 @@ _SCHEMA: dict[str, dict[str, Any]] = {
     },
     "orientation": {
         "allowed": {
+            "enabled",
             "phase_candidates",
             "preview_binning",
             "roi",
             "confidence_threshold",
         },
         "types": {
+            "enabled": (bool,),
             "phase_candidates": (list, type(None)),
             "preview_binning": (list, tuple),
             "roi": (list, tuple, type(None)),
             "confidence_threshold": (int, float),
         },
-        "defaults": {"preview_binning": [2, 2], "confidence_threshold": 0.05},
+        "defaults": {"enabled": True, "preview_binning": [2, 2], "confidence_threshold": 0.05},
     },
     "roi_bragg": {
         "allowed": {

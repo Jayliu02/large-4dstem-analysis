@@ -42,6 +42,45 @@ fourdstem-pipeline --config configs/pipeline_smoke.yaml
 
 ## Unified Config
 
+### Basic analysis of the three local MIB scans
+
+```powershell
+python -m pip install -e ".[basic-analysis]"
+python -m fourdstem_pipeline.basic_analysis --data data --output outputs/basic_analysis --scan-shape 256 256
+```
+
+This batch command validates every MIB frame header, uses explicit big-endian
+U16 memory mapping, and processes each scan in 16 x 16 navigation blocks without
+binning. It produces Chinese HTML/Markdown reports, virtual images, four
+unsupervised diffraction-feature classes, representative regions, raw-count QC,
+and cross-file radial-profile comparisons. Open `outputs/basic_analysis/report_zh.html`.
+An existing nonempty output directory is rejected to preserve previous runs.
+Failures are recorded per file and remaining files continue; the process exits
+nonzero if any file failed. The supported input is single-chip processed U16 MIB
+with 384-byte headers and a confirmed row-major scan shape.
+
+No crystallographic indexing or quantitative orientation is performed. Filename
+step sizes remain unverified metadata; all coordinates use scan/detector pixels.
+The 4095 clipping check is explicitly a 12-bit assumption and reports suspected
+saturation. Radial curves are max-normalized before PCA/KMeans; four classes and
+seed 0 are fixed exploration defaults, not inferred phase counts. Each file has
+its own fitted classes and detector masks, recorded in its configuration.
+
+The batch also audits a uniform 16 x 16 sample for scan-correlated bright-spot
+motion using a robust affine fit. When significant motion is found, reports and
+QC manifests warn that fixed-centre classes cannot be interpreted as material
+regions. No beam-motion correction is applied. High-count pixel coordinates
+are saved separately. Re-audit an existing completed batch with:
+
+```powershell
+python -m fourdstem_pipeline.beam_audit outputs/basic_analysis
+```
+
+`orientation.enabled: false` disables the Stage-1 orientation preview. Omitting
+the key preserves the existing enabled behavior. For explicit fixed-frame MIB
+reading use `data.backend: mib_memmap` together with `scan_shape`,
+`detector_shape`, `dtype: '>u2'`, and `mib_header_bytes: 384`.
+
 `configs/pipeline.yaml` is the canonical configuration. It contains:
 
 | Section | Purpose |

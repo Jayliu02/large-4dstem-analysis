@@ -27,6 +27,8 @@ def beam_diagnostics(
     virtual: VirtualImageResult,
     png_dir: Path,
     preprocess_dir: Path,
+    *,
+    radial_center: tuple[float, float] | list[float] | None = None,
 ) -> dict[str, str]:
     preprocess_dir.mkdir(parents=True, exist_ok=True)
     mean_dp = virtual.mean_diffraction
@@ -35,7 +37,8 @@ def beam_diagnostics(
     total = max(float(mean_dp.sum()), 1e-12)
     cy = float((mean_dp * yy).sum() / total)
     cx = float((mean_dp * xx).sum() / total)
-    radial_center = ((mean_dp.shape[0] - 1) / 2, (mean_dp.shape[1] - 1) / 2)
+    if radial_center is None:
+        radial_center = ((mean_dp.shape[0] - 1) / 2, (mean_dp.shape[1] - 1) / 2)
     offset = float(np.hypot(cy - radial_center[0], cx - radial_center[1]))
     text = (
         f"estimated_center_yx: [{cy:.3f}, {cx:.3f}]\n"
@@ -55,8 +58,8 @@ def beam_diagnostics(
     save_png(png_dir / "radial_mask_overlay.png", _radial_overlay(mean_dp, radial_center))
     central_mask = ((yy - radial_center[0]) ** 2 + (xx - radial_center[1]) ** 2) <= 7**2
     save_png(png_dir / "central_disk_mask.png", central_mask)
-    saturation = (max_dp >= np.percentile(max_dp, 99.9)).astype(np.float32)
-    save_png(png_dir / "saturation_fraction_map.png", saturation)
+    if virtual.saturation_fraction is not None:
+        save_png(png_dir / "saturation_fraction_map.png", virtual.saturation_fraction)
     return {"beam_center": str(preprocess_dir / "beam_center_estimate.txt")}
 
 
