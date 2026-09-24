@@ -6,11 +6,11 @@
 # Single-stage debugging still works:
 #   fourdstem-run --config configs/pipeline.yaml
 #   fourdstem-stage2 --config configs/pipeline.yaml
-#   fourdstem-stage2b --config configs/pipeline.yaml
-#   fourdstem-stage2c --config configs/pipeline.yaml
+# Historical Ti CIF matching is retired. For Fe phase identification use:
+#   python -m fourdstem_pipeline.phase_identification --config configs/phase_identification.yaml
 
 pipeline:
-  stages: [stage1, stage2a, stage2b]
+  stages: [stage1, stage2a]
   output_dir: outputs/0617_4d_1/pipeline
 
 project:
@@ -53,13 +53,7 @@ phase_screening:
   n_components: 4
   n_clusters: 4
   method: pca_nmf_cluster
-  candidate_phases:
-    - name: Ti-bcc
-      cif: data/0617-4d/Ti-bcc.cif
-      reference_profile: null
-    - name: Ti-hcp
-      cif: data/0617-4d/Ti-hcp.cif
-      reference_profile: null
+  candidate_phases: []
 
 orientation:
   preview_binning: [4, 4]
@@ -116,15 +110,8 @@ stage2b:
     radial_min_support: 0.25
     phase_margin_threshold: 0.08
     orientation_margin_threshold: 0.05
-  candidate_cifs:
-    - name: Ti_hcp
-      phase: Ti-hcp
-      path: data/0617-4d/Ti-hcp.cif
-      space_group: 194
-    - name: Ti_bcc
-      phase: Ti-bcc
-      path: data/0617-4d/Ti-bcc.cif
-      space_group: 229
+  # No bundled candidates: the former Ti example is disabled.
+  candidate_cifs: []
 
 stage2c:
   enabled: false
@@ -137,13 +124,7 @@ stage2c:
     results_npz: null
     use_stage2a_rois: true
   candidates:
-    phases:
-      - name: Ti-bcc
-        cif: data/0617-4d/Ti-bcc.cif
-        color: blue
-      - name: Ti-hcp
-        cif: data/0617-4d/Ti-hcp.cif
-        color: red
+    phases: []
   calibration:
     beam_energy_kv: 200
     inv_ang_per_pixel: 0.0192

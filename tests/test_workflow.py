@@ -656,11 +656,12 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(s2c.call_args.args[0]["stage2_dir"], str(stage2a_dir))
         self.assertEqual(s2c.call_args.args[0]["stage2b_dir"], str(stage2b_dir))
 
-    def test_pyxem_script_roi_uses_project_yx_order(self):
-        """Standalone pyxem script follows y0,y1,x0,x1 ROI convention."""
-        script = (Path(__file__).resolve().parents[1] / "scripts" / "pyxem_hyperspy_ti_phase_orientation.py").read_text(encoding="utf-8")
-        self.assertIn('metavar=("Y0", "Y1", "X0", "X1")', script)
-        self.assertIn("s.inav[y0:y1, x0:x1]", script)
+    def test_retired_pyxem_script_exits_before_loading_dependencies(self):
+        """The historical Ti entry point must not start a new matching run."""
+        import runpy
+        script = Path(__file__).resolve().parents[1] / "scripts" / "pyxem_hyperspy_ti_phase_orientation.py"
+        with self.assertRaisesRegex(SystemExit, "historical Ti CIF example is disabled"):
+            runpy.run_path(str(script), run_name="__main__")
 
     def test_qc_summary_and_report_use_ascii_labels(self):
         """QC summary and report Markdown contain only ASCII labels, no emoji."""

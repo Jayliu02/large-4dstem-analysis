@@ -112,7 +112,7 @@ def test_calibration_holdout_and_ambiguity(config):
     assert assess_scale(scales,scores,.005,fit,libs,config['calibration'],config['matching'])['boundary_optimum']
 
 
-def test_cif_interpretation_and_cubic_extinctions(config):
+def test_cif_interpretation_and_cubic_extinctions(config,tmp_path):
     pytest.importorskip('pymatgen')
     pytest.importorskip('py4DSTEM')
     from fourdstem_pipeline.phase_structures import read_structure,make_crystal
@@ -131,7 +131,12 @@ def test_cif_interpretation_and_cubic_extinctions(config):
     wrong=deepcopy(config['candidates'][1]);wrong['expected_space_group']=229
     with pytest.raises(ValueError,match='symmetry mismatch'):
         read_structure(wrong)
-    wrong['cif']='references/cifs/Ti-beta.cif'
+    # Generate a wrong-element fixture; do not depend on retired reference CIFs.
+    from pymatgen.core import Lattice, Structure
+    from pymatgen.io.cif import CifWriter
+    wrong_path=tmp_path/'wrong_element.cif'
+    CifWriter(Structure(Lattice.cubic(2.86),['Cu','Cu'],[[0,0,0],[.5,.5,.5]])).write_file(wrong_path)
+    wrong['cif']=str(wrong_path)
     with pytest.raises(ValueError,match='ordered elemental Fe'):
         read_structure(wrong)
 

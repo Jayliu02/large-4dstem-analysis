@@ -70,7 +70,9 @@ python -m pytest -q
 
 本批三份实测数据及合成控制的结果见 [Fe 相识别验证记录](docs/phase_identification_fe_validation.zh-CN.md)。[原 Ti 验证记录](docs/phase_identification_validation.zh-CN.md)已被结构修正取代，仅供历史追溯。
 
-统一流水线配置、旧 pyxem／取向及一致性分析仍是历史 Ti 示例，未迁移到 Fe；本批 MIB 请使用上述独立逐点入口。
+接受率及拒绝原因的逐项重放见 [Fe 匹配诊断](docs/fe_matching_diagnostics.zh-CN.md)，包含扰动敏感性、电压假设、斑点覆盖率和模板搜索对照。
+
+历史 Ti CIF 已从仓库移除，旧 Ti pyxem／取向批处理入口已停用。统一配置仅默认启用 Stage 1／2A，所有 CIF 候选列表为空；旧索引和一致性 API 未迁移到 Fe。本批 MIB 请使用上述独立逐点入口。
 
 ## 安装
 
@@ -215,7 +217,7 @@ fourdstem-pipeline --config configs/pipeline.yaml
 python -m fourdstem_pipeline.cli pipeline --config configs/pipeline.yaml
 ```
 
-[configs/pipeline.yaml](configs/pipeline.yaml) 是统一配置示例，当前包含 `data/0617-4d` 路径、`512×512` 扫描尺寸和 Ti 候选晶相参数。使用新数据时，应核对输入路径、扫描尺寸、候选 CIF 和标定参数；本地三份 `256×256` 扫描数据的基础分析可使用前述批处理命令自动生成独立配置。
+[configs/pipeline.yaml](configs/pipeline.yaml) 是统一基础分析示例，保留 `data/0617-4d` 路径及 `512×512` 扫描尺寸，历史 Ti CIF 候选已清空，默认仅运行 Stage 1／2A。使用新数据时应核对输入路径及扫描尺寸；本地三份 `256×256` 扫描数据的基础分析可使用前述批处理命令自动生成独立配置。Fe 匹配使用 `configs/phase_identification.yaml`。
 
 ### 配置结构
 
@@ -261,16 +263,7 @@ data:
   lazy: true
 ```
 
-要接入 [scripts/pyxem_hyperspy_ti_phase_orientation.py](scripts/pyxem_hyperspy_ti_phase_orientation.py) 已生成的验证 NPZ，可配置：
-
-```yaml
-pipeline:
-  stages: [stage1, stage2a, stage2b, stage2c]
-
-stage2c:
-  input:
-    results_npz: results/pyxem_roi/pyxem_ti_phase_orientation_results.npz
-```
+历史 pyxem NPZ 导入 API 仅保留用于读取已有归档。原 Ti 模拟脚本及批处理入口已停用；归档中的 Ti 相编号不能重新解释为 Fe BCC／FCC。
 
 阶段间路径由统一流程自动传递：Stage 2A 接收 Stage 1 的 `stage1_dir`，Stage 2B 接收 Stage 2A 的 `stage2_dir`，Stage 2C 接收 Stage 2A/2B 目录，并输出可供共识分析使用的 `stage2c_manifest.json`。
 

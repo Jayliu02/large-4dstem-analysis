@@ -71,6 +71,9 @@ and template discretization remain limitations. No quantitative orientation,
 strain or material volume fractions are claimed. See the [Chinese guide](README.zh-CN.md)
 for the full workflow and output descriptions.
 
+See the [Fe rejection audit](docs/fe_matching_diagnostics.zh-CN.md) for the complete
+gate counts, replayed perturbations, voltage hypotheses and shortlist controls.
+
 ## Install
 
 ```bash
@@ -83,9 +86,10 @@ environment before running commands.
 
 ## Quick Start
 
-The unified pipeline configuration, pyxem/orientation scripts and consensus
-examples below are historical Ti workflows. They have not been migrated to Fe;
-use the independent per-pattern Fe entry point above for the current MIB scans.
+The bundled Ti CIFs have been removed. The old Ti pyxem/orientation launchers
+now exit with a retirement message. The unified example enables only Stage 1
+and Stage 2A and has no CIF candidates. The legacy indexing/consensus APIs have
+not been migrated to Fe; use the independent Fe entry point above for these scans.
 
 Run all enabled stages:
 
@@ -166,17 +170,9 @@ pipeline:
   stages: [stage1, stage2a, stage2b]
 ```
 
-To consume an existing pyxem validation NPZ from
-`scripts/pyxem_hyperspy_ti_phase_orientation.py`, set:
-
-```yaml
-pipeline:
-  stages: [stage1, stage2a, stage2b, stage2c]
-
-stage2c:
-  input:
-    results_npz: results/pyxem_roi/pyxem_ti_phase_orientation_results.npz
-```
+Historical pyxem NPZ import APIs remain available for reading archived results.
+The former Ti simulation script and batch launchers are disabled. Imported Ti
+phase indices must not be interpreted as Fe BCC/FCC labels.
 
 Examples:
 
