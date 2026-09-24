@@ -14,6 +14,63 @@
 
 对于尚无样品成分或衍射标定的 MIB 数据，可先使用独立的基础分析批处理入口。
 
+## Ti α／β／ω 逐点相识别
+
+在基础分析和束心位移审计完成后，对全部扫描位置进行晶体学匹配：
+
+```powershell
+conda env create -f environment-phase.yml
+conda activate fourdstem-phase
+python -m fourdstem_pipeline.phase_identification --config configs/phase_identification.yaml
+```
+
+也可在已有 **Python 3.12** 环境中执行 `pip install -e ".[phase-identification,test]"`。本流程使用 py4DSTEM 0.14.18 和 NumPy 1.x，与新版 NumPy 基础分析环境分开安装。当前工作区可使用 `.\.conda-phase\python.exe`。
+
+**`data/Ti-hcp.cif` 的原子坐标实际对应 ω-Ti，并非 α-hcp。** 程序检查展开后的晶胞、占位和空间群，不按文件名判相。结构来源见 [CIF 说明](references/cifs/README.md)。
+
+| 标签 | 结构 | 推断空间群 | 来源 |
+| --- | --- | --- | --- |
+| `0` | α-hcp | 194，P6₃/mmc | COD 9008517，a=2.950 Å、c=4.686 Å |
+| `1` | β-bcc | 229，Im-3m | 用户 `Ti-bcc.cif` 原样副本 |
+| `2` | ω-Ti | 191，P6/mmm | 用户 `Ti-hcp.cif` 原样副本 |
+| `-1` | 未索引 | — | 标定、束心或匹配证据不足 |
+| `-2` | 歧义 | — | 相竞争、电压假设或扰动检验未通过 |
+
+流程逐点定位直射束，以对称斑点和邻域残差复核；只转换斑点坐标，不插值原始衍射图。异常高计数仅在检测副本中处理。几何匹配保留积分强度至少 30、且不低于该图最强非中心斑点 10% 的斑点；全部检测记录仍保留。
+
+模板使用完整原子结构、运动学结构因子和激发误差，默认区轴步长 2°，自由搜索平面内转角及横向镜像，采用一对一斑点评分，没有模拟评分后备分支。在 `32×32` 空间网格划分训练／验证区域，用最多 128 个训练图样搜索 `0.005–0.05 Å⁻¹/像素`，用独立留出图样复核。每份扫描的三个相共用一个尺度；标定不可靠时保存逐点诊断，但不接受相标签。
+
+未知电压按 80／120／200／300 kV 四种假设处理。接受标签须在全部假设下一致，至少匹配 6 个非中心斑点、具有非共线方向、残差中位数不超过 1.5 像素、归一化相间分差至少 10%，并通过固定分数阈值与随机角度对照。初筛标签还须通过束心沿两轴各 ±1 像素、尺度 ±2% 的独立扰动检验。相图保留原扫描分辨率，不平滑或插值标签。
+
+最终标签还要求模板解释至少 70% 的入选斑点，以减少仅匹配部分斑点时的误接受；这仍不能排除少量重叠晶粒。可运行 `python scripts/validate_phase_identification.py` 复现独立区轴、不同尺度、束心平移、噪声、缺失斑点、离群点、随机角度和混合图样验证；结果保存在输出目录的 `synthetic_validation.json`。
+
+分数不是概率；候选结构条件下的尺度估计不能代替标准样品标定。图样自助抽样区间不包含全部空间相关和模型误差。运动学模板不描述动态衍射；重叠晶粒、畸变、应变、遗漏的相及模板离散都可能导致拒绝或误配。本入口不输出定量取向、应变或材料体积分数。
+
+### 相识别输出与断点续跑
+
+默认输出至 `outputs/phase_identification/`，原始 MIB、CIF 和基础分析结果保持不变。打开 `report_zh.html` 查看汇总，各扫描子目录包含：
+
+- `phase_id.npy`：通过全部检查的标签；`best_candidate.npy`：包含被拒绝位置的最佳候选，**不能直接作为相图**。
+- `score.npy`、`margin.npy`、`matched_peaks.npy`、`median_residual_px.npy`、`reason_flags.npy`：评分与拒绝依据。
+- `all_results.npy`：全部相／电压假设的模板、转角、匹配数与残差；字段见 `array_schema.json`。
+- `peaks/`：束心、全部检测斑点、强度及质量标记；`selected_peak_indices.npy` 记录用于匹配的斑点索引。
+- `calibration.json`、`calibration_samples.npz`：标定状态、训练／留出索引、尺度曲线、自助抽样区间和随机对照。
+- `pattern_evidence.png`、`representative_evidence.json`：实测图样、模板反射与 hkl 叠加证据。
+- `matching_checkpoint.json`：配置、CIF 哈希、原始文件大小／时间、源码哈希和依赖版本。
+
+重复相同命令即可续跑。输入、配置或算法变化时，程序拒绝复用旧缓存；请用 `--output outputs/phase_identification_run2` 指定新目录。不要同时对同一输出扫描运行多个进程。也可分阶段执行：
+
+```powershell
+python -m fourdstem_pipeline.phase_identification --stage prepare
+python -m fourdstem_pipeline.phase_identification --stage extract --scan scan_01_1045
+python -m fourdstem_pipeline.phase_identification --stage identify --scan scan_01_1045
+python -m pytest -q
+```
+
+`identify` 要求对应扫描已完成斑点提取。若标定失败，完整相图可以全部为 `-1`；这表示当前证据不足，不能解释为非晶或不存在候选相。
+
+本批三份实测数据及合成控制的结果见 [相识别验证记录](docs/phase_identification_validation.zh-CN.md)。
+
 ## 安装
 
 以下命令均在项目根目录运行。

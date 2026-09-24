@@ -1,0 +1,51 @@
+data:
+  directory: data
+  pattern: '*.mib'
+  scan_shape: [256, 256]
+  basic_analysis_dir: outputs/basic_analysis
+output_dir: outputs/phase_identification
+candidates:
+  - {id: 0, name: Ti-alpha, label: α-hcp, cif: references/cifs/Ti-alpha-COD9008517.cif, expected_space_group: 194}
+  - {id: 1, name: Ti-beta, label: β-bcc, cif: references/cifs/Ti-beta.cif, expected_space_group: 229}
+  - {id: 2, name: Ti-omega, label: ω, cif: references/cifs/Ti-omega.cif, expected_space_group: 191}
+peaks:
+  block_size: 16
+  max_peaks: 48
+  center_search_radius: 7
+  center_max_residual: 4.0
+  exclusion_radius: 8.0
+  max_radius: 120.0
+  minimum_spacing: 5
+  relative_threshold: 0.008
+  noise_sigma: 6.0
+  invalid_count: 4095
+templates:
+  voltages_kv: [80, 120, 200, 300]
+  zone_step_deg: 2.0
+  k_max: 3.0
+  excitation_error: 0.02
+  relative_intensity: 0.015
+  max_peaks: 64
+calibration:
+  sample_grid: 32
+  scale_range: [0.005, 0.05]
+  scale_steps: 41
+  fine_steps: 9
+  min_validation_patterns: 32
+  bootstrap_repeats: 100
+matching:
+  minimum_peak_relative_intensity: 0.10
+  minimum_peak_intensity: 30.0
+  shortlist: 8
+  match_radius_px: 2.5
+  min_peaks: 6
+  minimum_observed_fraction: 0.70
+  max_median_residual_px: 1.5
+  min_score: 0.35
+  min_phase_margin: 0.10
+  scale_perturbation: 0.02
+  center_perturbation_px: 1.0
+  null_percentile: 99
+runtime:
+  threads: 4
+  match_chunk: 256

@@ -1094,7 +1094,9 @@ class WorkflowTests(unittest.TestCase):
         with patch.dict(sys.modules, {"py4DSTEM": None}):
             # Also remove any cached import
             for mod_key in list(sys.modules):
-                if "py4DSTEM" in mod_key or "py4dstem" in mod_key:
+                # Preserve the None sentinel that actually blocks the import,
+                # including in environments where py4DSTEM is installed.
+                if mod_key != "py4DSTEM" and ("py4DSTEM" in mod_key or "py4dstem" in mod_key):
                     sys.modules.pop(mod_key, None)
             with self.assertRaises(ImportError) as ctx:
                 run_stage2(stage2_cfg)

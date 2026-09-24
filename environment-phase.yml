@@ -1,0 +1,8 @@
+name: fourdstem-phase
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+      - -e .[phase-identification,test]

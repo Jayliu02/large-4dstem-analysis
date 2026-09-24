@@ -7,3 +7,4 @@ outputs/
 *.egg-info/
 data/
 .venv/
+.conda-phase/

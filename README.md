@@ -10,6 +10,65 @@ Unified non-visual 4D-STEM analysis pipeline:
 
 The normal path is now a single YAML file and a single command.
 
+## Per-pattern Ti phase identification
+
+After basic MIB analysis and the beam-motion audit, run the independent
+alpha/beta/omega workflow in Python 3.12 with py4DSTEM 0.14.18 and NumPy 1.x:
+
+```powershell
+conda env create -f environment-phase.yml
+conda activate fourdstem-phase
+python -m fourdstem_pipeline.phase_identification --config configs/phase_identification.yaml
+```
+
+Alternatively, install `pip install -e ".[phase-identification,test]"` in a Python
+3.12 environment. The local workspace interpreter is `.\.conda-phase\python.exe`.
+
+**The supplied `Ti-hcp.cif` describes omega Ti**, inferred space group 191,
+not alpha-hcp. The library uses the user's original beta-bcc (229) and omega
+(191) structures plus COD 9008517 for alpha-hcp (194). See
+[CIF provenance](references/cifs/README.md). Atoms, occupancy and symmetry are
+checked; filenames do not determine phase identity.
+
+The workflow locates each pattern's beam, extracts subpixel peaks and matches
+physical kinematic templates using one-to-one peak correspondences. Weak peaks
+remain in the detection cache but are excluded from matching by configurable
+absolute/relative integrated-intensity cutoffs. Each scan has one reciprocal
+scale shared by all phases, fitted with spatial training/holdout samples.
+Unknown voltage is tested at 80/120/200/300 kV. Accepted labels require six
+noncentral matches, non-collinear support, median residual at most 1.5 px,
+normalized phase margin at least 10%, a score above fixed and randomized-angle
+null thresholds, and agreement across voltage, center and scale perturbations.
+No label smoothing or interpolation is applied.
+
+At least 70% of selected observed peaks must be explained; this reduces partial
+matches but does not establish single-phase purity. Run
+`python scripts/validate_phase_identification.py` for held-out zone directions,
+known scales, shifted centers, noise, missing peaks, outliers, randomized angles
+and geometric mixed-pattern controls. Results go to `synthetic_validation.json`.
+
+Open `outputs/phase_identification/report_zh.html` for the Chinese report. Labels
+are `0=alpha`, `1=beta`, `2=omega`, `-1=unindexed`, `-2=ambiguous`.
+`best_candidate.npy` includes rejected fits and is **not an accepted phase map**.
+Outputs include calibration curves, peak/center arrays, scores, margins,
+residuals, rejection flags, all template fits, and measured-pattern overlays
+with hkl evidence. `array_schema.json` defines the columns and flags.
+
+Rerun the same command to resume. Changed input/configuration/source fingerprints
+are rejected; select a new `--output` directory after changes. Use `--stage
+prepare`, `--stage extract`, or `--stage identify`, optionally with `--scan
+scan_01_1045`, for separate stages. Identification requires completed extraction.
+Do not run two writers for the same scan/output directory. Raw inputs and
+basic-analysis outputs are preserved.
+
+An uncertain calibration produces a complete rejection map. Scores are not
+probabilities; candidate-conditioned scale estimates are not instrument
+calibrations. Bootstrap intervals do not cover all spatial correlation/model
+error. Dynamical diffraction, overlapping grains, distortion, missing phases
+and template discretization remain limitations. No quantitative orientation,
+strain or material volume fractions are claimed. See the [Chinese guide](README.zh-CN.md)
+for the full workflow and output descriptions.
+
 ## Install
 
 ```bash
