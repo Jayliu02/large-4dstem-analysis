@@ -1,4 +1,4 @@
-"""Identify alpha/beta/omega Ti with per-pattern centering and explicit rejection."""
+"""Identify Fe BCC/FCC with per-pattern centering and explicit rejection."""
 from __future__ import annotations
 
 import argparse
@@ -130,9 +130,11 @@ def identify_scan(path, basic, output, peaks, libraries, cfg):
             print(f'  match {output.name}: {stop}/{n}, elapsed {time.perf_counter()-started:.0f}s', flush=True)
     checkpoint['complete'] = True
     atomic_json(checkpoint_path, checkpoint)
+    phase_labels = {'-2': 'ambiguous', '-1': 'unindexed',
+                    **{str(c['id']): c['label'] for c in cfg['candidates']}}
     atomic_json(output/'array_schema.json', {
         'scan_shape': shape, 'scan_order': 'row-major, unidirectional', 'coordinates': 'detector (y,x), pixels',
-        'phase_ids': {'-2': 'ambiguous', '-1': 'unindexed', '0': 'alpha-hcp', '1': 'beta-bcc', '2': 'omega'},
+        'phase_ids': phase_labels,
         'reason_bits': {'1': 'invalid beam center', '2': 'insufficient match evidence', '4': 'phase/voltage ambiguity',
                         '8': 'perturbation instability', '16': 'uncalibrated scale', '32': 'fewer than minimum peaks'},
         'result_columns': ['score', 'matched_peak_count', 'median_residual_px', 'in_plane_angle_rad',
@@ -143,7 +145,8 @@ def identify_scan(path, basic, output, peaks, libraries, cfg):
         'median_residual_px': 'residual of highest-scoring fit, including rejected fits; infinity means no match'})
     summary = {'file': str(path), 'output': output.name, 'status': 'complete', 'patterns': n,
                'calibration_status': calibration['status'], 'scale': scale,
-               'phase_counts': {str(k): int(np.count_nonzero(arrays['phase_id'] == k)) for k in [-2,-1,0,1,2]},
+               'phase_labels': phase_labels,
+               'phase_counts': {k: int(np.count_nonzero(arrays['phase_id'] == int(k))) for k in phase_labels},
                'input_unchanged': path.stat().st_mtime_ns == read_json(output/'peaks'/'peaks_checkpoint.json')['provenance']['mtime_ns']}
     scan_report(path, basic, output, peaks, arrays, libraries, calibration, cfg, summary)
     atomic_json(output/'phase_summary.json', summary)
@@ -151,8 +154,11 @@ def identify_scan(path, basic, output, peaks, libraries, cfg):
 
 
 def validate_config(cfg):
-    if [c['id'] for c in cfg['candidates']] != [0,1,2]:
-        raise ValueError('Expected phase ids 0=alpha, 1=beta, 2=omega, in that order.')
+    candidates = cfg['candidates']
+    if len(candidates) < 2 or [c['id'] for c in candidates] != list(range(len(candidates))):
+        raise ValueError('Expected at least two candidates with consecutive phase ids starting at zero.')
+    if len({c['name'] for c in candidates}) != len(candidates):
+        raise ValueError('Candidate names must be unique.')
     if len(cfg['templates']['voltages_kv']) < 2:
         raise ValueError('At least two voltage hypotheses are required for voltage stability testing.')
     lo, hi = cfg['calibration']['scale_range']

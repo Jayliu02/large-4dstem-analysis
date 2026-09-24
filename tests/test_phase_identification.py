@@ -56,14 +56,15 @@ def test_visibility_and_duplicate_reflections_do_not_inflate_score():
     assert n == 3 and score == pytest.approx(6/7)
 
 
-def test_decisions_reject_voltage_disagreement_small_margin_and_weak_support(config):
-    libs=[library([[1,1]],phase,v) for phase in range(3) for v in [80,300]]
-    results=np.zeros((5,6,7),np.float32)
+@pytest.mark.parametrize('phase_count',[2,3])
+def test_decisions_reject_voltage_disagreement_small_margin_and_weak_support(config,phase_count):
+    libs=[library([[1,1]],phase,v) for phase in range(phase_count) for v in [80,300]]
+    results=np.zeros((5,phase_count*2,7),np.float32)
     results[:,:,1]=8
     results[:,:,2]=.5
     results[:,:,6]=1
     results[:,0:2,0]=.8
-    results[1,3,0]=.95  # beta wins only at 300 kV
+    results[1,3,0]=.95  # second phase wins only at 300 kV
     results[2,2:4,0]=.79
     results[3,:,1]=5
     results[4,:,6]=0
@@ -111,20 +112,39 @@ def test_calibration_holdout_and_ambiguity(config):
     assert assess_scale(scales,scores,.005,fit,libs,config['calibration'],config['matching'])['boundary_optimum']
 
 
-def test_cif_interpretation_and_bcc_extinctions(config):
+def test_cif_interpretation_and_cubic_extinctions(config):
     pytest.importorskip('pymatgen')
     pytest.importorskip('py4DSTEM')
     from fourdstem_pipeline.phase_structures import read_structure,make_crystal
-    expected=[(194,2),(229,2),(191,3)]
-    for candidate,(group,sites) in zip(config['candidates'],expected):
+    expected=[(229,2,2.86303550),(225,4,3.65555117)]
+    for candidate,(group,sites,a) in zip(config['candidates'],expected):
         structure,audit=read_structure(candidate)
         assert audit['inferred_space_group']==group and len(structure)==sites
-    structure,_=read_structure(config['candidates'][1])
-    crystal=make_crystal(structure,1)
-    assert np.all(np.sum(crystal.hkl,axis=0)%2==0)
-    wrong=deepcopy(config['candidates'][2]);wrong['expected_space_group']=194
+        assert structure.is_ordered and {str(e) for e in structure.elements}=={'Fe'}
+        np.testing.assert_allclose(structure.lattice.abc,[a]*3)
+        crystal=make_crystal(structure,1)
+        if group==229:
+            assert np.all(np.sum(crystal.hkl,axis=0)%2==0)
+        else:
+            assert np.all(crystal.hkl%2 == crystal.hkl[:1]%2)
+        assert crystal.hkl.shape[1]>0
+    wrong=deepcopy(config['candidates'][1]);wrong['expected_space_group']=229
     with pytest.raises(ValueError,match='symmetry mismatch'):
         read_structure(wrong)
+    wrong['cif']='references/cifs/Ti-beta.cif'
+    with pytest.raises(ValueError,match='ordered elemental Fe'):
+        read_structure(wrong)
+
+
+def test_candidate_config_validation(config):
+    from fourdstem_pipeline.phase_identification import validate_config
+    validate_config(config)
+    wrong=deepcopy(config);wrong['candidates'][1]['id']=2
+    with pytest.raises(ValueError,match='consecutive phase ids'):
+        validate_config(wrong)
+    wrong=deepcopy(config);wrong['candidates']=wrong['candidates'][:1]
+    with pytest.raises(ValueError,match='at least two'):
+        validate_config(wrong)
 
 
 def test_peak_cache_resume_and_source_change_rejection(tmp_path,config):
@@ -189,7 +209,7 @@ def test_calibration_gate_and_perturbation_checks(tmp_path,config,monkeypatch,ca
     out=tmp_path/'scan';(out/'peaks').mkdir(parents=True)
     atomic_json(out/'peaks'/'peaks_checkpoint.json',{'signature':'test-peaks','provenance':{'mtime_ns':raw.stat().st_mtime_ns}})
     q=np.array([[.3,.1],[-.3,-.1],[.12,.6],[-.12,-.6],[.75,-.35],[-.75,.35],[.5,.8],[-.5,-.8]],np.float32)
-    libs=[library(q*(1+.3*phase),phase,v) for phase in range(3) for v in [80,300]]
+    libs=[library(q*(1+.3*phase),phase,v) for phase in range(2) for v in [80,300]]
     peaks={'center_yx':np.full((2,2,2),128,np.float32),'center_valid':np.ones((2,2),bool),
            'peak_yx':np.broadcast_to(q/.02+128,(2,2,8,2)).copy(),
            'intensity':np.full((2,2,8),100,np.float32),'count':np.full((2,2),8,np.int16)}
@@ -208,6 +228,34 @@ def test_calibration_gate_and_perturbation_checks(tmp_path,config,monkeypatch,ca
         assert np.all(np.load(out/'reason_flags.npy') & 16)
     assert np.all(np.load(out/'matched_peaks.npy') == 8)
     assert raw.read_bytes()==b'preserved raw input'
+    from fourdstem_pipeline.phase_peaks import read_json
+    schema=read_json(out/'array_schema.json')
+    assert schema['phase_ids']=={'-2':'ambiguous','-1':'unindexed','0':'Fe-BCC','1':'Fe-FCC'}
+    assert set(summary['phase_counts'])==set(schema['phase_ids'])
+    assert np.load(out/'all_results.npy').shape==(2,2,4,7)
+    assert identify_scan(raw,basic,out,peaks,libs,config)==summary
+    changed=deepcopy(config);changed['candidates'][0]['name']='changed-candidate'
+    with pytest.raises(ValueError,match='Matching cache'):
+        identify_scan(raw,basic,out,peaks,libs,changed)
+
+
+def test_fe_batch_report_labels_and_mixed_candidates(tmp_path):
+    from fourdstem_pipeline.phase_report import batch_report
+    labels={'-2':'ambiguous','-1':'unindexed','0':'Fe-BCC','1':'Fe-FCC'}
+    summary={'output':'scan_01_test','patterns':10,'calibration_status':'uncalibrated',
+             'scale':.02,'phase_labels':labels,'phase_counts':{'-2':0,'-1':10,'0':0,'1':0}}
+    target=tmp_path/'scan_01_test';target.mkdir()
+    atomic_json(target/'phase_summary.json',summary)
+    batch_report(tmp_path)
+    csv=(tmp_path/'phase_comparison.csv').read_text(encoding='utf-8-sig')
+    assert 'Fe-BCC,Fe-FCC,ambiguous,unindexed' in csv
+    html=(tmp_path/'report_zh.html').read_text(encoding='utf-8')
+    assert 'Fe-BCC' in html and 'Fe-FCC' in html and 'Ti' not in html
+    other=tmp_path/'scan_02_test';other.mkdir()
+    summary['phase_labels']['1']='old-phase'
+    atomic_json(other/'phase_summary.json',summary)
+    with pytest.raises(ValueError,match='different candidate'):
+        batch_report(tmp_path)
 
 
 def test_atomic_json_retries_transient_windows_lock(tmp_path,monkeypatch):

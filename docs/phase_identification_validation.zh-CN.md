@@ -1,5 +1,7 @@
 # Ti 相识别验证记录
 
+> 历史记录：本批数据的 Ti 候选结构选择有误，已于 2026-09-24 改为用户提供的 Fe-BCC／Fe-FCC。本页统计及原 `outputs/phase_identification/` 仅供追溯，不可解释为 Fe 相结果。当前配置已变更，最新结果见 [Fe 验证记录](phase_identification_fe_validation.zh-CN.md)。
+
 验证日期：2026-09-24。配置为 `configs/phase_identification.yaml`，Python 3.12、py4DSTEM 0.14.18、NumPy 1.26.4；完整依赖快照保存在 `outputs/phase_identification/environment_freeze.txt`。
 
 完整回归测试：102 通过、1 跳过。另验证了标定失败时的完整拒绝图、标定成功时的束心／尺度扰动分支、缓存迁移及 Windows 临时文件占用重试。测试使用工作区内的新临时目录，以避开系统临时目录的访问限制。

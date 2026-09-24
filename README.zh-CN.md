@@ -14,7 +14,7 @@
 
 对于尚无样品成分或衍射标定的 MIB 数据，可先使用独立的基础分析批处理入口。
 
-## Ti α／β／ω 逐点相识别
+## Fe BCC／FCC 逐点相识别
 
 在基础分析和束心位移审计完成后，对全部扫描位置进行晶体学匹配：
 
@@ -26,13 +26,12 @@ python -m fourdstem_pipeline.phase_identification --config configs/phase_identif
 
 也可在已有 **Python 3.12** 环境中执行 `pip install -e ".[phase-identification,test]"`。本流程使用 py4DSTEM 0.14.18 和 NumPy 1.x，与新版 NumPy 基础分析环境分开安装。当前工作区可使用 `.\.conda-phase\python.exe`。
 
-**`data/Ti-hcp.cif` 的原子坐标实际对应 ω-Ti，并非 α-hcp。** 程序检查展开后的晶胞、占位和空间群，不按文件名判相。结构来源见 [CIF 说明](references/cifs/README.md)。
+当前三份扫描的候选结构已修正为用户提供的 **Fe BCC／FCC**。默认输入目录为 `C:/Users/jayliu/Documents/Data`；两份 CIF 原样复制到仓库参考目录，晶格常数与原子坐标采用文件原值。程序检查纯 Fe 元素、占位和展开后的空间群，兼容 `Fe0+` 标记。结构来源及 SHA-256 见 [CIF 说明](references/cifs/README.md)。原 Ti 匹配结果仅保留为历史记录，不可作为本批 Fe 相结论。
 
 | 标签 | 结构 | 推断空间群 | 来源 |
 | --- | --- | --- | --- |
-| `0` | α-hcp | 194，P6₃/mmc | COD 9008517，a=2.950 Å、c=4.686 Å |
-| `1` | β-bcc | 229，Im-3m | 用户 `Ti-bcc.cif` 原样副本 |
-| `2` | ω-Ti | 191，P6/mmm | 用户 `Ti-hcp.cif` 原样副本 |
+| `0` | Fe-BCC | 229，Im-3m | 用户 `Fe-BCC.cif` 原样副本，a=2.86303550 Å |
+| `1` | Fe-FCC | 225，Fm-3m | 用户 `Fe-FCC.cif` 原样副本，a=3.65555117 Å |
 | `-1` | 未索引 | — | 标定、束心或匹配证据不足 |
 | `-2` | 歧义 | — | 相竞争、电压假设或扰动检验未通过 |
 
@@ -48,7 +47,7 @@ python -m fourdstem_pipeline.phase_identification --config configs/phase_identif
 
 ### 相识别输出与断点续跑
 
-默认输出至 `outputs/phase_identification/`，原始 MIB、CIF 和基础分析结果保持不变。打开 `report_zh.html` 查看汇总，各扫描子目录包含：
+默认输出至 `outputs/phase_identification_fe/`，原始 MIB、CIF 和基础分析结果保持不变。打开 `report_zh.html` 查看汇总，各扫描子目录包含：
 
 - `phase_id.npy`：通过全部检查的标签；`best_candidate.npy`：包含被拒绝位置的最佳候选，**不能直接作为相图**。
 - `score.npy`、`margin.npy`、`matched_peaks.npy`、`median_residual_px.npy`、`reason_flags.npy`：评分与拒绝依据。
@@ -69,7 +68,9 @@ python -m pytest -q
 
 `identify` 要求对应扫描已完成斑点提取。若标定失败，完整相图可以全部为 `-1`；这表示当前证据不足，不能解释为非晶或不存在候选相。
 
-本批三份实测数据及合成控制的结果见 [相识别验证记录](docs/phase_identification_validation.zh-CN.md)。
+本批三份实测数据及合成控制的结果见 [Fe 相识别验证记录](docs/phase_identification_fe_validation.zh-CN.md)。[原 Ti 验证记录](docs/phase_identification_validation.zh-CN.md)已被结构修正取代，仅供历史追溯。
+
+统一流水线配置、旧 pyxem／取向及一致性分析仍是历史 Ti 示例，未迁移到 Fe；本批 MIB 请使用上述独立逐点入口。
 
 ## 安装
 

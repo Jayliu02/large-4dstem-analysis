@@ -1,4 +1,4 @@
-"""Held-out Ti diffraction controls; run after --stage prepare (Python 3.12)."""
+"""Held-out Fe BCC/FCC diffraction controls (Python 3.12)."""
 from __future__ import annotations
 
 import argparse

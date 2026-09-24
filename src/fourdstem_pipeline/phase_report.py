@@ -48,15 +48,21 @@ def scan_report(path, basic, output, peaks, arrays, libraries, calibration, cfg,
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     from matplotlib.colors import ListedColormap, BoundaryNorm
-    colors = ListedColormap(['#e5a83c','#cccccc','#2878b5','#379568','#9757ba'])
-    norm = BoundaryNorm(np.arange(-2.5,3.5), colors.N)
-    names = ['ambiguous','unindexed','alpha-hcp','beta-bcc','omega']
+    candidates = cfg['candidates']
+    phase_ids = [-2, -1] + [c['id'] for c in candidates]
+    names = ['ambiguous', 'unindexed'] + [c['label'] for c in candidates]
+    labels = dict(zip(phase_ids, names))
+    palette = plt.get_cmap('tab10')
+    # Keep the default accepted phases blue/green, distinct from amber ambiguity.
+    palette_order = [0, 2, 4, 3, 5, 6, 8, 9, 1, 7]
+    colors = ListedColormap(['#e5a83c', '#cccccc'] + [palette(palette_order[i % 10]) for i in range(len(candidates))])
+    norm = BoundaryNorm(np.arange(-2.5, len(candidates) + .5), colors.N)
     figures = []
     fig,axes = plt.subplots(2,3,figsize=(15,9),constrained_layout=True)
     for ax,key,title in [(axes[0,0],'phase_id','Accepted phase (all checks)'),
                          (axes[0,1],'best_candidate','Best candidate (includes rejected fits)')]:
         artist=ax.imshow(arrays[key],cmap=colors,norm=norm)
-        bar=fig.colorbar(artist,ax=ax,ticks=[-2,-1,0,1,2],shrink=.8)
+        bar=fig.colorbar(artist,ax=ax,ticks=phase_ids,shrink=.8)
         bar.ax.set_yticklabels(names)
         ax.set_title(title)
     for ax,key,title in [(axes[0,2],'score','Minimum winning score across voltages'),
@@ -108,7 +114,7 @@ def scan_report(path, basic, output, peaks, arrays, libraries, calibration, cfg,
                          detector_shape=metadata['detector_shape'],dtype='>u2',mib_header_bytes=384)
     visibility=np.load(output/'detector_visibility.npy')
     representatives=[]
-    for phase in [0,1,2]:
+    for phase in [c['id'] for c in candidates]:
         mask=(arrays['phase_id']==phase)
         if not mask.any():
             mask=(arrays['best_candidate']==phase)&peaks['center_valid']
@@ -123,7 +129,9 @@ def scan_report(path, basic, output, peaks, arrays, libraries, calibration, cfg,
             representatives.append(np.unravel_index(index,mask.shape))
     evidence=[]
     if representatives:
-        fig,axes=plt.subplots(2,3,figsize=(16,10),constrained_layout=True)
+        columns = min(3, len(candidates))
+        rows = int(np.ceil(len(representatives) / columns))
+        fig,axes=plt.subplots(rows,columns,figsize=(6*columns,5*rows),constrained_layout=True,squeeze=False)
         for ax,(y,x) in zip(axes.ravel(),representatives):
             result=arrays['all_results'][y,x]
             lib_index=int(result[:,0].argmax())
@@ -141,11 +149,13 @@ def scan_report(path, basic, output, peaks, arrays, libraries, calibration, cfg,
             for i,j,distance in pairs[:12]:
                 ax.plot([obs[i,1],pred[j,1]],[obs[i,0],pred[j,0]],color='#ff67d0',lw=1)
                 ax.annotate(str(tuple(int(v) for v in hkl[j])),(pred[j,1],pred[j,0]),fontsize=6,color='#47cbff')
-            ax.set_title(f"({y},{x}) candidate={int(lib['phase_id'])}; accepted={int(arrays['phase_id'][y,x])}\n"
+            ax.set_title(f"({y},{x}) candidate={labels[int(lib['phase_id'])]}; accepted={labels[int(arrays['phase_id'][y,x])]}\n"
                          f"{int(lib['voltage_kv'])} kV hypothesis; score={best[0]:.3f}; matches={int(best[1])}",fontsize=10)
             ax.legend(fontsize=6,loc='upper left')
             evidence.append({'scan_yx':[int(y),int(x)],'accepted_phase':int(arrays['phase_id'][y,x]),
-                             'candidate':int(lib['phase_id']),'voltage_hypothesis_kv':int(lib['voltage_kv']),
+                             'accepted_phase_label':labels[int(arrays['phase_id'][y,x])],
+                             'candidate':int(lib['phase_id']),'candidate_label':labels[int(lib['phase_id'])],
+                             'voltage_hypothesis_kv':int(lib['voltage_kv']),
                              'template_index':int(best[4]),'score':float(best[0]),
                              'reason_flags':int(arrays['reason_flags'][y,x]),'selected_peaks':int(peaks['count'][y,x]),
                              'matched_peaks':len(pairs),'observed_yx':obs,'predicted_yx':pred,'predicted_hkl':hkl,
@@ -163,11 +173,11 @@ def scan_report(path, basic, output, peaks, arrays, libraries, calibration, cfg,
                'too few held-out patterns support the fitted scale':'独立留出图样中支持该尺度的数量不足',
                'too few valid spatial samples for scale fitting and independent validation':'可用于拟合及独立验证的有效空间样本不足'}
     paragraphs=[f"输入：{path.name}。完整处理 {summary['patterns']:,} 个扫描位置；未对相标签平滑或插值。",
-        f"相标签：α-hcp={counts['0']}，β-bcc={counts['1']}，ω={counts['2']}；歧义={counts['-2']}，未索引={counts['-1']}。这些比例是通过当前阈值的位置比例，不是材料体积分数。",
+        '相标签：'+'，'.join(f"{c['label']}={counts[str(c['id'])]}" for c in candidates)+f"；歧义={counts['-2']}，未索引={counts['-1']}。这些比例是通过当前阈值的位置比例，不是材料体积分数。",
         f"尺度状态：{calibration['status']}；工作估计 {calibration['scale_inv_angstrom_per_pixel']:.7f} Å⁻¹/像素。"+
         ('未通过原因：'+'；'.join(reason_zh.get(r,r) for r in calibration['reasons']) if calibration['reasons'] else '通过候选结构条件下的空间留出验证；仍需外部标准样品校准。'),
-        '三个候选结构分别为 COD 9008517 的 α-hcp、用户 Ti-bcc.cif 的 β-bcc，以及用户 Ti-hcp.cif 实际对应的 ω-Ti。原 CIF 声明 P1 时，以原子坐标推断的对称性为准。',
-        '每份扫描共用一个倒空间尺度；80/120/200/300 kV 是未知电压的假设，不能从本结果宣称仪器电压。真实电压若不在此范围，稳定性检验不适用。',
+        '候选结构：'+'；'.join(f"{c['label']}，CIF={c['cif']}，预期空间群={c['expected_space_group']}" for c in candidates)+'。晶格常数及原子坐标采用 CIF 原值；程序检查元素、占位和展开结构的空间群，来源指纹见结构审计。',
+        f"每份扫描共用一个倒空间尺度；{'/'.join(str(v) for v in cfg['templates']['voltages_kv'])} kV 是未知电压的假设，不能从本结果宣称仪器电压。真实电压若不在此范围，稳定性检验不适用。",
         f"接受相标签要求各电压假设一致、至少 {cfg['matching']['min_peaks']} 个非中心一对一匹配斑点、二维方向支持、残差中位数 ≤{cfg['matching']['max_median_residual_px']} 像素、归一化相间分差 ≥{cfg['matching']['min_phase_margin']:.0%}，并通过束心 ±{cfg['matching']['center_perturbation_px']} 像素及尺度 ±{cfg['matching']['scale_perturbation']:.0%} 的独立扰动检验。",
         f"分数阈值为 {calibration['null_score_threshold']:.3f}，取固定阈值与随机角度对照第 {cfg['matching']['null_percentile']} 百分位的较大者。分数不是后验概率；随机对照不能替代材料真值验证。",
         f"最终标签还要求模板解释至少 {cfg['matching']['minimum_observed_fraction']:.0%} 的入选斑点。该条件减少部分斑点偶合导致的接受，仍不能证明不存在少量重叠晶粒。",
@@ -177,20 +187,28 @@ def scan_report(path, basic, output, peaks, arrays, libraries, calibration, cfg,
     links=[('数值汇总','phase_summary.json'),('标定审计','calibration.json'),('数组字段与拒绝原因','array_schema.json'),
            ('逐点相标签 NPY','phase_id.npy'),('全部候选匹配 NPY','all_results.npy'),('代表点与反射证据','representative_evidence.json'),
            ('结构及来源审计','../templates/structure_audit.json'),('运行指纹与断点','matching_checkpoint.json')]
-    write_report(output,f'Ti 相识别：{output.name}',paragraphs,figures,links)
+    write_report(output,f"{' / '.join(c['label'] for c in candidates)} 相识别：{output.name}",paragraphs,figures,links)
 
 
 def batch_report(root):
     import csv
     summaries=[read_json(path) for path in sorted(root.glob('scan_*/phase_summary.json'))]
+    if not summaries:
+        raise ValueError('No completed scan summaries found.')
+    labels = summaries[0]['phase_labels']
+    if any(s['phase_labels'] != labels for s in summaries):
+        raise ValueError('Cannot combine scans with different candidate phase labels.')
+    candidate_ids = sorted((k for k in labels if int(k) >= 0), key=int)
+    candidate_names = [labels[k] for k in candidate_ids]
     atomic_json(root/'batch_summary.json',summaries)
     with (root/'phase_comparison.csv').open('w',encoding='utf-8-sig',newline='') as stream:
         writer=csv.writer(stream)
-        writer.writerow(['scan','calibration_status','scale_inv_A_per_pixel','alpha','beta','omega','ambiguous','unindexed'])
+        writer.writerow(['scan','calibration_status','scale_inv_A_per_pixel']+candidate_names+['ambiguous','unindexed'])
         for s in summaries:
-            writer.writerow([s['output'],s['calibration_status'],s['scale']]+[s['phase_counts'][str(k)] for k in [0,1,2,-2,-1]])
-    paragraphs=['采用 α-hcp、β-bcc、ω 三相候选库，逐点定位束心并竞争匹配。候选结构、倒空间尺度与加速电压的不确定性均纳入拒绝规则。']
+            writer.writerow([s['output'],s['calibration_status'],s['scale']]+[s['phase_counts'][k] for k in candidate_ids+['-2','-1']])
+    paragraphs=[f"采用 {'、'.join(candidate_names)} 候选库，逐点定位束心并竞争匹配。候选结构、倒空间尺度与加速电压的不确定性均纳入拒绝规则。",
+                '标签定义：'+'；'.join(f'{k}={v}' for k,v in labels.items())+'。']
     for s in summaries:
         paragraphs.append(f"{s['output']}：{s['patterns']:,} 个位置，标定状态 {s['calibration_status']}；相标签计数 {s['phase_counts']}。")
     paragraphs.append('未索引或歧义不代表非晶，也不代表不存在候选相。请先查看标定状态，再查看通过全部检查的相标签；最佳候选图仅用于诊断。')
-    write_report(root,'Ti 三相识别汇总',paragraphs,[],[(s['output'],f"{s['output']}/report_zh.html") for s in summaries])
+    write_report(root,f"{' / '.join(candidate_names)} 相识别汇总",paragraphs,[],[(s['output'],f"{s['output']}/report_zh.html") for s in summaries])

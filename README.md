@@ -10,10 +10,10 @@ Unified non-visual 4D-STEM analysis pipeline:
 
 The normal path is now a single YAML file and a single command.
 
-## Per-pattern Ti phase identification
+## Per-pattern Fe BCC/FCC phase identification
 
 After basic MIB analysis and the beam-motion audit, run the independent
-alpha/beta/omega workflow in Python 3.12 with py4DSTEM 0.14.18 and NumPy 1.x:
+Fe BCC/FCC workflow in Python 3.12 with py4DSTEM 0.14.18 and NumPy 1.x:
 
 ```powershell
 conda env create -f environment-phase.yml
@@ -24,11 +24,13 @@ python -m fourdstem_pipeline.phase_identification --config configs/phase_identif
 Alternatively, install `pip install -e ".[phase-identification,test]"` in a Python
 3.12 environment. The local workspace interpreter is `.\.conda-phase\python.exe`.
 
-**The supplied `Ti-hcp.cif` describes omega Ti**, inferred space group 191,
-not alpha-hcp. The library uses the user's original beta-bcc (229) and omega
-(191) structures plus COD 9008517 for alpha-hcp (194). See
-[CIF provenance](references/cifs/README.md). Atoms, occupancy and symmetry are
-checked; filenames do not determine phase identity.
+The current candidates are the user's `Fe-BCC.cif` (space group 229,
+a=2.86303550 Å) and `Fe-FCC.cif` (225, a=3.65555117 Å), copied unchanged from
+`C:/Users/jayliu/Documents/Data`. The default configuration reads the three MIB
+files in that directory. See [CIF provenance](references/cifs/README.md).
+Elemental Fe, occupancy and expanded symmetry are checked, including neutral
+`Fe0+` sites. The previous Ti candidate set was incorrect for these scans;
+historical Ti results do not identify the Fe phases.
 
 The workflow locates each pattern's beam, extracts subpixel peaks and matches
 physical kinematic templates using one-to-one peak correspondences. Weak peaks
@@ -47,8 +49,8 @@ matches but does not establish single-phase purity. Run
 known scales, shifted centers, noise, missing peaks, outliers, randomized angles
 and geometric mixed-pattern controls. Results go to `synthetic_validation.json`.
 
-Open `outputs/phase_identification/report_zh.html` for the Chinese report. Labels
-are `0=alpha`, `1=beta`, `2=omega`, `-1=unindexed`, `-2=ambiguous`.
+Open `outputs/phase_identification_fe/report_zh.html` for the Chinese report. Labels
+are `0=Fe-BCC`, `1=Fe-FCC`, `-1=unindexed`, `-2=ambiguous`.
 `best_candidate.npy` includes rejected fits and is **not an accepted phase map**.
 Outputs include calibration curves, peak/center arrays, scores, margins,
 residuals, rejection flags, all template fits, and measured-pattern overlays
@@ -80,6 +82,10 @@ On Windows, avoid the Microsoft Store Python stub by activating the conda
 environment before running commands.
 
 ## Quick Start
+
+The unified pipeline configuration, pyxem/orientation scripts and consensus
+examples below are historical Ti workflows. They have not been migrated to Fe;
+use the independent per-pattern Fe entry point above for the current MIB scans.
 
 Run all enabled stages:
 

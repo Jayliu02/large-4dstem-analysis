@@ -18,8 +18,8 @@ def read_structure(candidate):
     with warnings.catch_warnings(record=True) as caught:
         structure = Structure.from_file(path)
     structure.remove_oxidation_states()
-    if not structure.is_ordered or set(str(e) for e in structure.elements) != {'Ti'}:
-        raise ValueError(f'Expected ordered elemental Ti structure: {path}')
+    if not structure.is_ordered or set(str(e) for e in structure.elements) != {'Fe'}:
+        raise ValueError(f'Expected ordered elemental Fe structure: {path}')
     groups = [SpacegroupAnalyzer(structure, symprec=t).get_space_group_number() for t in [1e-3, 1e-2]]
     if len(set(groups)) != 1 or groups[0] != candidate['expected_space_group']:
         raise ValueError(f'Structure/symmetry mismatch for {path}: inferred {groups}')
@@ -29,7 +29,7 @@ def read_structure(candidate):
     declared = cif_dict.get('_symmetry_Int_Tables_number', cif_dict.get('_space_group_IT_number'))
     audit = {'id': candidate['id'], 'name': candidate['name'], 'label': candidate['label'],
              'path': str(path), 'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
-             'declared_space_group': declared, 'inferred_space_group': groups[0],
+             'elements': ['Fe'], 'declared_space_group': declared, 'inferred_space_group': groups[0],
              'symmetry_tolerances_angstrom': [1e-3, 1e-2], 'site_count': len(structure),
              'lattice': structure.lattice.matrix, 'abc': structure.lattice.abc,
              'angles': structure.lattice.angles, 'fractional_positions': structure.frac_coords,
@@ -53,7 +53,7 @@ def prepare_libraries(candidates, cfg, output: Path):
     for candidate in candidates:
         structure, audit = read_structure(candidate)
         audits.append(audit)
-        signature = digest({'cif': audit['sha256'], 'cfg': cfg, 'py4DSTEM': version('py4DSTEM'),
+        signature = digest({'candidate': candidate, 'cif': audit['sha256'], 'cfg': cfg, 'py4DSTEM': version('py4DSTEM'),
                             'implementation': hashlib.sha256(Path(__file__).read_bytes()).hexdigest()})
         manifest = output/f"{candidate['name']}_manifest.json"
         if manifest.exists():

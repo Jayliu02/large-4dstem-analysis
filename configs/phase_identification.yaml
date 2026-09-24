@@ -1,13 +1,12 @@
 data:
-  directory: data
+  directory: C:/Users/jayliu/Documents/Data
   pattern: '*.mib'
   scan_shape: [256, 256]
   basic_analysis_dir: outputs/basic_analysis
-output_dir: outputs/phase_identification
+output_dir: outputs/phase_identification_fe
 candidates:
-  - {id: 0, name: Ti-alpha, label: α-hcp, cif: references/cifs/Ti-alpha-COD9008517.cif, expected_space_group: 194}
-  - {id: 1, name: Ti-beta, label: β-bcc, cif: references/cifs/Ti-beta.cif, expected_space_group: 229}
-  - {id: 2, name: Ti-omega, label: ω, cif: references/cifs/Ti-omega.cif, expected_space_group: 191}
+  - {id: 0, name: Fe-BCC, label: Fe-BCC, cif: references/cifs/Fe-BCC.cif, expected_space_group: 229}
+  - {id: 1, name: Fe-FCC, label: Fe-FCC, cif: references/cifs/Fe-FCC.cif, expected_space_group: 225}
 peaks:
   block_size: 16
   max_peaks: 48
