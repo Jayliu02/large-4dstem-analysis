@@ -8,3 +8,8 @@ outputs/
 data/
 .venv/
 .conda-phase/
+# Synthetic benchmark: large binary payloads and per-run artifacts stay out of git;
+# reference/ (CSV+manifest), truth/ and inputs/ (CIF copies) are tracked.
+benchmarks/Fe_FCC_BCC_v1/datasets/
+benchmarks/Fe_FCC_BCC_v1/basic/
+benchmarks/Fe_FCC_BCC_v1/runs/

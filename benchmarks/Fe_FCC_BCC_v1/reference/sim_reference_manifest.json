@@ -1,0 +1,118 @@
+{
+  "generated": "2026-09-25T15:32:29",
+  "config_digest": "d6f391bb7b5ec492b4cce68f790d65a206cbac1cb772bd29392b2bbc8597e1ab",
+  "config_path": "benchmarks\\fe_fcc_bcc\\config.yaml",
+  "pymatgen_version": "2026.9.24",
+  "wavelength_A": 0.019687489001519794,
+  "wavelength_formula": "relativistic: lambda = h*c / sqrt(eU * (eU + 2*m0*c^2)), h*c = 12.39841984 keV*A",
+  "cif_sha256": {
+    "bcc": "10c51e7c30f582e3712fa70332663493e7608c43af86ceace35e579339147cda",
+    "fcc": "5fd92bd8e8859fd72bdc1289fd057d0ff29b86db474752c1730e1a649755b736"
+  },
+  "code_sha256": {
+    "sim_reference.py": "b52f0dd43c7cefdbcf4bdec7e252702a136d9dd88c4adade99658c0ebac265f8",
+    "bench_geometry.py": "cea23a1fb5a123bccce8f1bc1caff9ff65fd009c6b177447cebf7ff1b7a3156d"
+  },
+  "orientations": {
+    "Fe-BCC_001_0": {
+      "phase": "Fe-BCC",
+      "zone_axis": [
+        0,
+        0,
+        1
+      ],
+      "cif": "references/cifs/Fe-BCC.cif",
+      "spots": 8,
+      "strong_spots": 8,
+      "amplitude_range": [
+        605.7009883574965,
+        1200.0
+      ],
+      "wavelength_A": 0.019687489001519794
+    },
+    "Fe-BCC_011_0": {
+      "phase": "Fe-BCC",
+      "zone_axis": [
+        0,
+        1,
+        1
+      ],
+      "cif": "references/cifs/Fe-BCC.cif",
+      "spots": 8,
+      "strong_spots": 8,
+      "amplitude_range": [
+        380.6358627674405,
+        1200.0
+      ],
+      "wavelength_A": 0.019687489001519794
+    },
+    "Fe-FCC_001_0": {
+      "phase": "Fe-FCC",
+      "zone_axis": [
+        0,
+        0,
+        1
+      ],
+      "cif": "references/cifs/Fe-FCC.cif",
+      "spots": 8,
+      "strong_spots": 8,
+      "amplitude_range": [
+        580.5826227870808,
+        1200.0
+      ],
+      "wavelength_A": 0.019687489001519794
+    },
+    "Fe-FCC_111_0": {
+      "phase": "Fe-FCC",
+      "zone_axis": [
+        1,
+        1,
+        1
+      ],
+      "cif": "references/cifs/Fe-FCC.cif",
+      "spots": 6,
+      "strong_spots": 6,
+      "amplitude_range": [
+        1200.0,
+        1200.0
+      ],
+      "wavelength_A": 0.019687489001519794
+    }
+  },
+  "template_cross_check": {
+    "Fe-BCC_001_0": {
+      "status": "ok",
+      "template_row": 0,
+      "strong_spots": 20,
+      "max_residual_A": 1.63183910012376e-08,
+      "median_residual_A": 1.4595612624875251e-08,
+      "missing_hkl": []
+    },
+    "Fe-BCC_011_0": {
+      "status": "ok",
+      "template_row": 378,
+      "strong_spots": 14,
+      "max_residual_A": 1.0320701684124072e-08,
+      "median_residual_A": 1.0320667917851421e-08,
+      "missing_hkl": []
+    },
+    "Fe-FCC_001_0": {
+      "status": "ok",
+      "template_row": 0,
+      "strong_spots": 20,
+      "max_residual_A": 4.875416153412867e-09,
+      "median_residual_A": 4.3607046862348406e-09,
+      "missing_hkl": []
+    },
+    "Fe-FCC_111_0": {
+      "status": "ok",
+      "template_row": 405,
+      "strong_spots": 18,
+      "max_residual_A": 7.331248645895487e-09,
+      "median_residual_A": 5.6967135921651075e-09,
+      "missing_hkl": []
+    }
+  },
+  "substitution_note": "ReciPro is not installed on this machine, so the plan Gate 0 export (SpotInfo CSV/PNG) was replaced by an in-repo independent kinematic simulator per the plan pause rules: \"先采用其他具有数值峰列表的独立模拟来源，记录替代原因\". ReciPro export can be added later and compared against this reference.",
+  "non_independence_note": "The reference generator and the analysis side (py4DSTEM Crystal templates) share the same CIF files, the same pymatgen CIF parser and the same kinematic |F|^2 physics. They differ in the structure-factor implementation (pymatgen Mott-Bethe vs py4DSTEM), the orientation machinery and all rasterization/quantization (ours). A defect shared by both kinematic engines or by pymatgen CIF parsing could escape this benchmark; inspect_cifs.py analytic extinction rules are the backstop. The geometric spot positions are exact lattice quantities and are verified against the pipeline template library where available."
+}

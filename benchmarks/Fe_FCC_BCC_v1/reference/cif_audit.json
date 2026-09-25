@@ -1,0 +1,106 @@
+{
+  "Fe-BCC": {
+    "pipeline_audit": {
+      "id": 0,
+      "name": "Fe-BCC",
+      "label": "Fe-BCC",
+      "path": "references\\cifs\\Fe-BCC.cif",
+      "sha256": "10c51e7c30f582e3712fa70332663493e7608c43af86ceace35e579339147cda",
+      "elements": [
+        "Fe"
+      ],
+      "declared_space_group": "229",
+      "inferred_space_group": 229,
+      "symmetry_tolerances_angstrom": [
+        0.001,
+        0.01
+      ],
+      "site_count": 2,
+      "lattice": "[[2.86303550e+00 0.00000000e+00 1.75310363e-16]\n [4.60411223e-16 2.86303550e+00 1.75310363e-16]\n [0.00000000e+00 0.00000000e+00 2.86303550e+00]]",
+      "abc": [
+        2.8630355,
+        2.8630355,
+        2.8630355
+      ],
+      "angles": [
+        90.0,
+        90.0,
+        90.0
+      ],
+      "fractional_positions": "[[0.  0.  0. ]\n [0.5 0.5 0.5]]",
+      "occupancies": [
+        1.0,
+        1.0
+      ],
+      "parsing_warnings": [],
+      "interpretation": "candidate structure only; phase identity comes from expanded structure, not input filename"
+    },
+    "sha256": "10c51e7c30f582e3712fa70332663493e7608c43af86ceace35e579339147cda",
+    "analytic_structure_factors": {
+      "(1, 0, 0)": 1.4997597826618576e-32,
+      "(1, 1, 0)": 4.0,
+      "(1, 1, 1)": 1.3497838043956716e-31,
+      "(2, 0, 0)": 4.0
+    },
+    "numeric_zolz_001_structure_factors": {
+      "(1, 0, 0)": 6.664735708054186e-33,
+      "(2, 0, 0)": 0.5047508236312471,
+      "(1, 1, 0)": 1.0
+    },
+    "extinction_rules": "I-centering: h+k+l even; (100),(111) forbidden; (110),(200) allowed",
+    "problems": []
+  },
+  "Fe-FCC": {
+    "pipeline_audit": {
+      "id": 1,
+      "name": "Fe-FCC",
+      "label": "Fe-FCC",
+      "path": "references\\cifs\\Fe-FCC.cif",
+      "sha256": "5fd92bd8e8859fd72bdc1289fd057d0ff29b86db474752c1730e1a649755b736",
+      "elements": [
+        "Fe"
+      ],
+      "declared_space_group": "225",
+      "inferred_space_group": 225,
+      "symmetry_tolerances_angstrom": [
+        0.001,
+        0.01
+      ],
+      "site_count": 4,
+      "lattice": "[[3.65555117e+00 0.00000000e+00 2.23837952e-16]\n [5.87857463e-16 3.65555117e+00 2.23837952e-16]\n [0.00000000e+00 0.00000000e+00 3.65555117e+00]]",
+      "abc": [
+        3.65555117,
+        3.65555117,
+        3.65555117
+      ],
+      "angles": [
+        90.0,
+        90.0,
+        90.0
+      ],
+      "fractional_positions": "[[0.  0.  0. ]\n [0.5 0.5 0. ]\n [0.5 0.  0.5]\n [0.  0.5 0.5]]",
+      "occupancies": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "parsing_warnings": [],
+      "interpretation": "candidate structure only; phase identity comes from expanded structure, not input filename"
+    },
+    "sha256": "5fd92bd8e8859fd72bdc1289fd057d0ff29b86db474752c1730e1a649755b736",
+    "analytic_structure_factors": {
+      "(1, 0, 0)": 5.99903913064743e-32,
+      "(1, 1, 0)": 0.0,
+      "(1, 1, 1)": 16.0,
+      "(2, 0, 0)": 16.0
+    },
+    "numeric_zolz_001_structure_factors": {
+      "(1, 0, 0)": 1.1360730531351605e-32,
+      "(2, 0, 0)": 1.0,
+      "(1, 1, 0)": 0.0
+    },
+    "extinction_rules": "F-centering: h,k,l same parity; (100),(110) forbidden; (111),(200) allowed",
+    "problems": []
+  }
+}
