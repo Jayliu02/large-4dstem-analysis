@@ -1,0 +1,33 @@
+# Research ablations only. Never writes to the production phase-identification root.
+baseline_root: outputs/phase_identification_fe
+output_dir: outputs/phase_experiments_fe
+seed: 20260924
+threads: 4
+sampling:
+  train_size: 96
+  test_size: 128
+  block_size: 32
+  guard_px: 2
+uncertainty:
+  bootstrap_repeats: 300
+  min_scale_patterns: 16
+  center_floor_px: 0.10
+  min_friedel_pairs: 3
+refinement:
+  zone_offsets_deg: [-1.0, -0.5, 0.0, 0.5, 1.0]
+  max_center_shift_px: 1.0
+  max_scale_fraction: 0.02
+  max_angle_deg: 1.0
+  iterations: 2
+peaks:
+  snr: 5.0
+  raw_support_snr: 3.0
+  neighbor_radius: 1
+  similarity_cutoff: 1.5
+  similarity_bandwidth: 0.35
+validation:
+  null_repeats: 3
+  synthetic_per_phase: 12
+  synthetic_scale: 0.016293708591051115
+  dynamical_thickness_angstrom: [100.0, 300.0, 600.0]
+variants: [baseline, uncertainty, local_zone, bounded_geometry, adaptive_peaks, nonlocal_peaks, combined]
