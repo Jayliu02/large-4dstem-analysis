@@ -348,3 +348,7 @@ python -m pytest tests/test_workflow.py tests/test_basic_analysis.py -q
 | 点或中心坐标 | `y, x` |
 
 Stage 1 ROI 候选使用预处理后的扫描坐标；Stage 2A 根据 `r_bin` 将其转换为原始扫描坐标。
+
+## MIB 第一轮实施记录
+
+Merlin MIB 的原点质控、动态 BF/ADF 和首个 ROI Bragg 参数扫描已实现。运行命令、实测结果及后续验收边界见 [第一轮实施与验收报告](docs/mib_round1.zh-CN.md)。

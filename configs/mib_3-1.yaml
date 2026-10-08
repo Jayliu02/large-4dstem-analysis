@@ -1,0 +1,47 @@
+input:
+  path: 'data/3-1-ss5.8nm-c2 50-cl 110-sp7-gunlens2-12bit-256x256-0.62ms-67k-1045.mib'
+  scan_shape: [256, 256]
+  detector_shape: [256, 256]
+  dtype_expected: '>u2'
+  chunks: [1, 16, 256, 256]
+metadata:
+  scan_step_nm: 5.8
+  exposure_ms: 0.62
+  voltage_kv: null
+  camera_length_nominal: 110
+  camera_length_units_confirmed: false
+  scan_order_confirmed: false
+seed: 1045
+baseline: outputs/origin_check
+origin:
+  samples_stride: 8
+  search_window: [64, 192, 64, 192]
+  local_radius_px: 6
+  smoothing_sigma: 1.5
+  min_snr: 5.0
+  width_range_px: [0.5, 6.0]
+  model: robust_plane
+  robust_scale_px: 2.0
+  outlier_threshold_px: 5.0
+  validation_points_per_quadrant: 12
+  median_target_px: 2.0
+  p95_target_px: 5.0
+  min_valid_fraction: 0.9
+virtual:
+  bf_radius_px: 15
+  adf_inner_px: 18
+  adf_outer_px: 50
+  bf_radii_px: [10, 15, 20]
+  adf_annuli_px: [[18, 50], [25, 60]]
+bragg:
+  roi: [32, 64, 48, 80]
+  roi_selection_reason: 'Upper-left grain interior selected from corrected ADF and 12 spatial DP spot checks; similar peak geometry and clear direct beam.'
+  roi_size: [32, 32]
+  review_patterns: 20
+  min_relative_intensity_candidates: [0.03, 0.05, 0.10]
+  min_peak_spacing_candidates: [6, 8, 10]
+  edge_boundary_candidates: [10, 20]
+  correlation_power: 1.0
+  subpixel: poly
+output:
+  root: outputs/mib_pipeline
