@@ -1,0 +1,43 @@
+baseline_config: configs/mib_3-1.yaml
+baseline_root: outputs/mib_pipeline
+output: outputs/mib_round2
+seed: 2045
+rois:
+  - id: grain
+    bounds: [32, 64, 48, 80]
+    description: Upper-left grain interior; first-round ADF and DP review
+  - id: boundary
+    bounds: [88, 120, 80, 112]
+    description: Junction/boundary band in corrected ADF; morphology only
+  - id: texture
+    bounds: [184, 216, 144, 176]
+    description: Lower textured region with different diffuse/scattering contrast
+sampling:
+  tuning_per_roi: 20
+  holdout_per_roi: 20
+template:
+  source_count: 24
+  max_origin_residual_px: 0.3
+  crop_radius_px: 12
+  support_radius_px: 8
+  annulus_outer_px: 12
+  max_half_relative_l1: 0.25
+  max_centroid_offset_px: 0.3
+detection:
+  relative_intensities: [0.01, 0.03, 0.05]
+  min_spacings: [6, 8, 10]
+  edges: [10, 20]
+  working_relative_intensity: 0.03
+  working_spacing: 8
+  working_edge: 10
+  sigma: 1
+  max_peaks: 70
+  quality_snr_min: 5
+  central_radius_px: 8
+  neighbor_match_radius_px: 3
+gates:
+  central_coverage_min: 0.95
+  central_median_max_px: 2
+  central_p95_max_px: 5
+  overlap_max_error_px: 0.000001
+  synthetic_max_error_px: 0.3
