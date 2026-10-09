@@ -354,3 +354,5 @@ Stage 1 ROI 候选使用预处理后的扫描坐标；Stage 2A 根据 `r_bin` �
 Merlin MIB 的原点质控、动态 BF/ADF 和首个 ROI Bragg 参数扫描已实现。运行命令、实测结果及后续验收边界见 [第一轮实施与验收报告](docs/mib_round1.zh-CN.md)。
 
 第二轮已扩展到三个 ROI 的双分支检测、峰坐标校正和 BVM/重叠一致性诊断。见 [第二轮计划](docs/mib_round2_plan.zh-CN.md) 与 [执行结果](docs/mib_round2_results.zh-CN.md)。这些结果保留像素单位，领域复核前标记为 provisional。
+
+第三轮已完成弱峰检测改进、独立合成验收、72 个新位置的计数拆分诊断及三 ROI 完整提取。见 [第三轮计划](docs/mib_round3_plan.zh-CN.md) 与 [执行结果](docs/mib_round3_results.zh-CN.md)。用户确认暂无标定，P5 明确记录为 uncalibrated。

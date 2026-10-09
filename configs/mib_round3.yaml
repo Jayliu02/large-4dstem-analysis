@@ -1,0 +1,38 @@
+round2_config: configs/mib_round2.yaml
+round2_root: outputs/mib_round2
+output: outputs/mib_round3
+seed: 3045
+detection:
+  relative_intensity: 0.01
+  snr_candidates: [5, 8, 12]
+  methods: [raw, template, hybrid]
+  merge_radius_px: 3
+  refine_radius_px: 6
+  max_refine_shift_px: 3
+  width_min_px: 1.5
+  width_max_px: 5.5
+  max_single_pixel_fraction: 0.25
+synthetic:
+  training_seed: 13045
+  validation_seed: 23045
+  signal_patterns: 24
+  null_patterns: 8
+  match_radius_px: 2
+  precision_min: 0.95
+  recall_min: 0.85
+validation:
+  points_per_roi: 24
+  split_match_radius_px: 2
+gates:
+  central_coverage_min: 0.95
+  central_median_max_px: 2
+  central_p95_max_px: 5
+  overlap_max_error_px: 0.000001
+calibration:
+  status: uncalibrated
+  user_confirmation_date: '2026-10-09'
+  user_statement: 暂无标定
+  voltage_kv: null
+  independent_references: []
+  reciprocal_convention: g=1/d
+  g_scale_inv_angstrom_per_px: null
