@@ -356,3 +356,5 @@ Merlin MIB 的原点质控、动态 BF/ADF 和首个 ROI Bragg 参数扫描已�
 第二轮已扩展到三个 ROI 的双分支检测、峰坐标校正和 BVM/重叠一致性诊断。见 [第二轮计划](docs/mib_round2_plan.zh-CN.md) 与 [执行结果](docs/mib_round2_results.zh-CN.md)。这些结果保留像素单位，领域复核前标记为 provisional。
 
 第三轮已完成弱峰检测改进、独立合成验收、72 个新位置的计数拆分诊断及三 ROI 完整提取。见 [第三轮计划](docs/mib_round3_plan.zh-CN.md) 与 [执行结果](docs/mib_round3_results.zh-CN.md)。用户确认暂无标定，P5 明确记录为 uncalibrated。
+
+第四轮完成 864 次真实背景峰注入回收，并提供离线标注页面与来源绑定的复核 JSON 导入。见 [第四轮计划](docs/mib_round4_plan.zh-CN.md) 和 [结果与复核说明](docs/mib_round4_results.zh-CN.md)；页面位于 `outputs/mib_round4/review.html`，拥挤峰漏检问题仍需重点复核。

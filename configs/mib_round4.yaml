@@ -1,0 +1,17 @@
+round3_root: outputs/mib_round3
+output: outputs/mib_round4
+seed: 4045
+injection:
+  amplitudes: [8, 16, 32]
+  shapes: [empirical, gaussian]
+  gaussian_sigma_px: 2
+  isolated_exclusion_px: 14
+  crowded_distance_px: 10
+  detector_margin_px: 20
+  match_radius_px: 2
+  strong_amplitude: 32
+  strong_isolated_recovery_min: 0.90
+review:
+  minimum_complete_per_roi: 20
+  maximum_false_fraction: 0.05
+  maximum_mean_missed_major: 0.5
